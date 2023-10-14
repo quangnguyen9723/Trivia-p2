@@ -7,6 +7,22 @@
 
 import UIKit
 
+extension String {
+    var decodingHTMLEntities: String? {
+            let data = Data(utf8)
+            let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
+                .documentType: NSAttributedString.DocumentType.html,
+                .characterEncoding: String.Encoding.utf8.rawValue
+            ]
+            
+            guard let attributedString = try? NSAttributedString(data: data, options: options, documentAttributes: nil) else {
+                return nil
+            }
+            
+            return attributedString.string
+        }
+}
+
 class TriviaViewController: UIViewController {
   
   @IBOutlet weak var currentQuestionNumberLabel: UILabel!
@@ -27,27 +43,39 @@ class TriviaViewController: UIViewController {
     addGradient()
     questionContainerView.layer.cornerRadius = 8.0
     // TODO: FETCH TRIVIA QUESTIONS HERE
+      self.fetch(reset: true)
   }
+    
+    private func fetch(reset: Bool) {
+        TriviaQuestionService.fetchTriviaQuestions() {triviaQuestions in
+            self.questions = triviaQuestions
+            if (reset) {
+                self.updateQuestion(withQuestionIndex: 0)
+            }
+        }
+    }
   
   private func updateQuestion(withQuestionIndex questionIndex: Int) {
     currentQuestionNumberLabel.text = "Question: \(questionIndex + 1)/\(questions.count)"
     let question = questions[questionIndex]
-    questionLabel.text = question.question
+      questionLabel.text = question.question.decodingHTMLEntities
     categoryLabel.text = question.category
     let answers = ([question.correctAnswer] + question.incorrectAnswers).shuffled()
+      answerButton2.isHidden = true
+      answerButton3.isHidden = true
     if answers.count > 0 {
-      answerButton0.setTitle(answers[0], for: .normal)
+        answerButton0.setTitle(answers[0].decodingHTMLEntities, for: .normal)
     }
     if answers.count > 1 {
-      answerButton1.setTitle(answers[1], for: .normal)
+        answerButton1.setTitle(answers[1].decodingHTMLEntities, for: .normal)
       answerButton1.isHidden = false
     }
     if answers.count > 2 {
-      answerButton2.setTitle(answers[2], for: .normal)
+        answerButton2.setTitle(answers[2].decodingHTMLEntities, for: .normal)
       answerButton2.isHidden = false
     }
     if answers.count > 3 {
-      answerButton3.setTitle(answers[3], for: .normal)
+        answerButton3.setTitle(answers[3].decodingHTMLEntities, for: .normal)
       answerButton3.isHidden = false
     }
   }
@@ -58,6 +86,7 @@ class TriviaViewController: UIViewController {
     }
     currQuestionIndex += 1
     guard currQuestionIndex < questions.count else {
+        fetch(reset: false)
       showFinalScore()
       return
     }
@@ -92,19 +121,19 @@ class TriviaViewController: UIViewController {
   }
   
   @IBAction func didTapAnswerButton0(_ sender: UIButton) {
-    updateToNextQuestion(answer: sender.titleLabel?.text ?? "")
+      updateToNextQuestion(answer: sender.titleLabel?.text?.decodingHTMLEntities ?? "")
   }
   
   @IBAction func didTapAnswerButton1(_ sender: UIButton) {
-    updateToNextQuestion(answer: sender.titleLabel?.text ?? "")
+      updateToNextQuestion(answer: sender.titleLabel?.text?.decodingHTMLEntities ?? "")
   }
   
   @IBAction func didTapAnswerButton2(_ sender: UIButton) {
-    updateToNextQuestion(answer: sender.titleLabel?.text ?? "")
+      updateToNextQuestion(answer: sender.titleLabel?.text?.decodingHTMLEntities ?? "")
   }
   
   @IBAction func didTapAnswerButton3(_ sender: UIButton) {
-    updateToNextQuestion(answer: sender.titleLabel?.text ?? "")
+      updateToNextQuestion(answer: sender.titleLabel?.text?.decodingHTMLEntities ?? "")
   }
 }
 
